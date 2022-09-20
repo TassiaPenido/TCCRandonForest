@@ -1,0 +1,200 @@
+###São 02 banco de dados: PACIENTES COM OUTRAS SINDROEMES REPIRATÓTIAS ###(CHAMAREMOS APENAS DE DIV) E PACIENTES COM COVID-19 (CHAMAREMOS DE DIVCOVID)
+
+##IMPORTAR DADOS
+#OUTRAS SÍNDROMES
+library(readxl)
+
+ DIV <- read_excel("C:/Users/Daniel/Desktop/TCC/DIV.xlsx", 
+     col_types = c("numeric", "text", "numeric", 
+         "text", "text", "text", "text", "text", 
+        "text", "text", "text", "text", "text", 
+        "text", "text", "text", "text", "text", 
+        "text", "text", "text", "text", "numeric", 
+         "text", "text"))
+
+##IMPORTAR DADOS 
+#COVID-19
+
+ DIVCOVID <- read_excel("C:/Users/Daniel/Desktop/TCC/DIVCOVID.xlsx", 
+    col_types = c("numeric", "text", "numeric", 
+         "text", "text", "text", "text", "text", 
+         "text", "text", "text", "text", "text", 
+         "text", "text", "text", "text", "text", 
+       "text", "text", "text", "text", "numeric", 
+         "text", "text"))
+
+
+
+
+#PACOTES NECESSÁRIOS
+install.packages("rpart")
+install.packages("rpart.plot")
+install.packages("ggplot")
+install.packages("caret")
+
+library(rpart)
+library(rpart.plot)
+library(caret)
+library(ggplot2)
+library(caret)
+
+
+## Altera nome da coluna  
+#Outras síndromes 
+names(DIV)[names(DIV) == "CS_SEXO"] = "GENERO"
+names(DIV)[names(DIV) == "NU_IDADE_N"] = "IDADE"
+names(DIV)[names(DIV) == "CS_GESTANT"] = "GESTANTE"
+names(DIV)[names(DIV) == "DIAS"] = "DIAS_OBS"
+
+## Altera nome da coluna 
+#COVID-19 
+
+names(DIVCOVID)[names(DIVCOVID) == "CS_SEXO"] = "GENERO"
+names(DIVCOVID)[names(DIVCOVID) == "NU_IDADE_N"] = "IDADE"
+names(DIVCOVID)[names(DIVCOVID) == "CS_GESTANT"] = "GESTANTE"
+names(DIVCOVID)[names(DIVCOVID) == "DIAS"] = "DIAS_OBS"
+
+##omitir dados inválidos
+DIV <- na.omit(DIV)
+DIVCOVID <- na.omit(DIVCOVID)
+
+##EXCLUIR A PRIEMIRA COLUNA POIS ELA NÃO CONTEM DADOS RELEVANTES
+DIV<- DIV[-1]
+DIVCOVID<- DIVCOVID[-1]
+
+## SELECIONA APENAS OBSERVAÇÕES DE EVOLUÇÃO DOS PACIENTES 
+DIV <- filter(DIV, EVOLUCAO != "IGNORADO", EVOLUCAO != "NA")
+DIVCOVID <- filter(DIVCOVID, EVOLUCAO != "IGNORADO", EVOLUCAO != "NA")
+## Conversão das do formato da coluna de data.frame de caractere para fator 
+#OUTRAS SINDROMES
+DIV$GESTANTE <- as.factor(DIV$GESTANTE)
+DIV$PUERPERA <- as.factor(DIV$PUERPERA)
+DIV$FEBRE <- as.factor(DIV$FEBRE)
+DIV$TOSSE <- as.factor(DIV$TOSSE)
+DIV$GARGANTA <- as.factor(DIV$GARGANTA)
+DIV$DISPNEIA <- as.factor(DIV$DISPNEIA)
+DIV$DIARREIA <- as.factor(DIV$DIARREIA)
+DIV$VOMITO <- as.factor(DIV$VOMITO)
+DIV$HEMATOLOGI <- as.factor(DIV$HEMATOLOGI)
+DIV$SIND_DOWN <- as.factor(DIV$SIND_DOWN)
+DIV$HEPATICA <- as.factor(DIV$HEPATICA)
+DIV$HEPATICA <- as.factor(DIV$HEPATICA)
+DIV$ASMA <- as.factor(DIV$ASMA)
+DIV$DIABETES <- as.factor(DIV$DIABETES)
+DIV$NEUROLOGIC <- as.factor(DIV$NEUROLOGIC)
+DIV$PNEUMOPATI <- as.factor(DIV$PNEUMOPATI)
+DIV$IMUNODEPRE <- as.factor(DIV$IMUNODEPRE)
+DIV$RENAL <- as.factor(DIV$RENAL)
+DIV$EVOLUCAO <- as.factor(DIV$EVOLUCAO)
+DIV$COMORBIDADE <- as.factor(DIV$COMORBIDADE)
+DIV$SINTOMA <- as.factor(DIV$SINTOMA)
+
+## Conversão das do formato da coluna de data.frame de caractere para fator 
+#COVID-19	
+DIVCOVID$GESTANTE <- as.factor(DIVCOVID$GESTANTE)
+DIVCOVID$PUERPERA <- as.factor(DIVCOVID$PUERPERA)
+DIVCOVID$FEBRE <- as.factor(DIVCOVID$FEBRE)
+DIVCOVID$TOSSE <- as.factor(DIVCOVID$TOSSE)
+DIVCOVID$GARGANTA <- as.factor(DIVCOVID$GARGANTA)
+DIVCOVID$DISPNEIA <- as.factor(DIVCOVID$DISPNEIA)
+DIVCOVID$DIARREIA <- as.factor(DIVCOVID$DIARREIA)
+DIVCOVID$VOMITO <- as.factor(DIVCOVID$VOMITO)
+DIVCOVID$HEMATOLOGI <- as.factor(DIVCOVID$HEMATOLOGI)
+DIVCOVID$SIND_DOWN <- as.factor(DIVCOVID$SIND_DOWN)
+DIVCOVID$HEPATICA <- as.factor(DIVCOVID$HEPATICA)
+DIVCOVID$HEPATICA <- as.factor(DIVCOVID$HEPATICA)
+DIVCOVID$ASMA <- as.factor(DIVCOVID$ASMA)
+DIVCOVID$DIABETES <- as.factor(DIVCOVID$DIABETES)
+DIVCOVID$NEUROLOGIC <- as.factor(DIVCOVID$NEUROLOGIC)
+DIVCOVID$PNEUMOPATI <- as.factor(DIVCOVID$PNEUMOPATI)
+DIVCOVID$IMUNODEPRE <- as.factor(DIVCOVID$IMUNODEPRE)
+DIVCOVID$RENAL <- as.factor(DIVCOVID$RENAL)
+DIVCOVID$EVOLUCAO <- as.factor(DIVCOVID$EVOLUCAO)
+DIVCOVID$COMORBIDADE <- as.factor(DIVCOVID$COMORBIDADE)
+DIVCOVID$SINTOMA <- as.factor(DIVCOVID$SINTOMA)
+
+
+####Ajuste do modelo
+
+#PACOTES NECESSÁRIOS
+install.packages("rpart")
+install.packages("rpart.plot")
+
+library(rpart)
+library(rpart.plot)
+library(caret)
+
+#CRIAÇÃO DO MODELO  - COVID-19
+modelo <- rpart(EVOLUCAO ~ ., method = "class", data = DIVCOVID)
+prp(modelo, extra = 1)
+
+#CRIAÇÃO DO MODELO  - OUTRAS SINDROMES
+modelo <- rpart(EVOLUCAO ~ ., method = "class", data = DIV)
+prp(modelo, extra = 1)
+
+
+# definir 75% dos dados para treino, 25% para teste – COVID
+DIVCOVIDtrainIndex  <- createDataPartition(DIVCOVID$EVOLUCAO, p = 0.75, list = FALSE)
+DIVCOVID_treino <- DIVCOVID[ DIVCOVIDtrainIndex, ]
+DIVCOVID_teste  <-DIVCOVID[-DIVCOVIDtrainIndex, ]
+
+# definir 75% dos dados para treino, 25% para teste – OUTRAS SINDROMES
+DIVtrainIndex  <- createDataPartition(DIV$EVOLUCAO, p = 0.75, list = FALSE)
+DIV_treino <- DIV [ DIVtrainIndex, ]
+DIV_teste  <-DIV [-DIVtrainIndex, ]
+
+
+#PARAMETROS USADOS NO AJUSTE
+fitControl <- trainControl(method = "cv",
+                           number = 5)
+
+
+#AJUSTE - COVID
+ajuste_DIVCOVID <- train(EVOLUCAO ~ ., 
+                     data = DIVCOVID_treino, 
+                     method = "rf", 
+                     importance = TRUE,
+                     trControl = fitControl)
+#AJUSTE - OUTRAS SINDROMES
+ajuste_DIV<- train(EVOLUCAO ~ ., 
+                     data = DIV_treino, 
+                     method = "rf", 
+                     importance = TRUE,
+                     trControl = fitControl)
+
+
+#VISUALIZAR AJUSTE – COVID
+ajuste_DIVCOVID
+#VISUALIZAR AJUSTE – OUTRAS SINDROMES
+ajuste_DIVCOVID
+
+
+
+#PREDIÇÃO – COVID
+predicaoDIVCOVID <- predict(ajuste_DIVCOVID,DIVCOVID_teste)
+confusionMatrix(predicaoDIVCOVID, DIVCOVID_teste$EVOLUCAO)
+
+#PREDIÇÃO – OUTRAS SINDROMES
+predicaoDIV <- predict(ajuste_DIV,DIV_teste)
+confusionMatrix(predicaoDIV, DIV_teste$EVOLUCAO)
+
+
+#VERIFICAR QUAIS FORAM, DENTRE ESTAS QUATRO VARIÁVEIS PREDITORAS, AQUELAS QUE TIVERAM A MAIOR IMPORTÂNCIA NO MODELO. – COVID
+ggplot(varImp(ajuste_DIVCOVID)) +
+labs( title = "Gráfico 11: Importância das variáveis em relação ao modelo Random Forest – pacientes com COVID-19 ")
+
+#VERIFICAR QUAIS FORAM, DENTRE ESTAS QUATRO VARIÁVEIS PREDITORAS, AQUELAS QUE TIVERAM A MAIOR IMPORTÂNCIA NO MODELO. – OUTRAS SINDROMES
+ggplot(varImp(ajuste_DIV)) +
+labs( title = "Gráfico 12: Importância das variáveis em relação ao modelo Random Forest – pacientes com outras síndromes respiratórias ")
+
+
+
+
+
+
+
+
+
+
+
+
